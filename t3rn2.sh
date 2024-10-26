@@ -64,7 +64,8 @@ function main_menu() {
 # 重启节点函数
 function restart_node() {
     echo "正在重启节点进程..."
-
+    source "$HOME/.bashrc"
+    
     # 查找 executor 进程并终止
     pkill -f executor
 
