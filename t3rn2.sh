@@ -4,6 +4,7 @@
 SCRIPT_PATH="$HOME/t3rn.sh"
 LOGFILE="$HOME/executor/executor.log"
 EXECUTOR_DIR="$HOME/executor"
+KEYFILE="$HOME/t3rn_key.txt"
 export NODE_ENV=testnet
 export LOG_LEVEL=debug
 export LOG_PRETTY=false
@@ -21,8 +22,6 @@ if [ "$(id -u)" != "0" ]; then
     exit 1
 fi
 
-source "$HOME/.bashrc"
-
 # 主菜单函数
 function main_menu() {
     while true; do
@@ -32,7 +31,7 @@ function main_menu() {
         echo "1) 执行脚本"
         echo "2) 查看日志"
         echo "3) 删除节点"
-        echo "4) 重启节点（领水后用）"
+        echo "4) 领水重启"
         echo "5) 退出"
 
         read -p "请输入你的选择 [1-4]: " choice
@@ -64,14 +63,25 @@ function main_menu() {
 # 重启节点函数
 function restart_node() {
     echo "正在重启节点进程..."
-    source "$HOME/.bashrc"
-    
+
+    # 从文件中读取私钥
+    if [ -f "$KEYFILE" ]; then
+        PRIVATE_KEY_LOCAL=$(cat "$KEYFILE")
+    else
+        echo "私钥文件不存在，请先执行脚本生成私钥文件。"
+        read -n 1 -s -r -p "按任意键返回主菜单..."
+        main_menu
+    fi
+
     # 查找 executor 进程并终止
     pkill -f executor
 
     # 切换目录并执行脚本
     echo "切换目录并执行 ./executor..."
     cd ~/executor/executor/bin
+
+    # 设置私钥环境变量
+    export PRIVATE_KEY_LOCAL="$PRIVATE_KEY_LOCAL"
 
     # 重定向日志输出
     ./executor > "$LOGFILE" 2>&1 &
@@ -124,11 +134,8 @@ function execute_script() {
     # 提示用户输入私钥
     read -p "请输入 PRIVATE_KEY_LOCAL 的值: " PRIVATE_KEY_LOCAL
 
-    # 将私钥写入 .bashrc
-    echo "export PRIVATE_KEY_LOCAL=\"$PRIVATE_KEY_LOCAL\"" >> "$HOME/.bashrc"
-
-    # 设置私钥变量
-    export PRIVATE_KEY_LOCAL="$PRIVATE_KEY_LOCAL"
+    # 将私钥写入 t3rn_key.txt
+    echo "$PRIVATE_KEY_LOCAL" > "$KEYFILE"
 
     # 删除压缩文件
     echo "删除压缩包..."
@@ -137,6 +144,9 @@ function execute_script() {
     # 切换目录并执行脚本
     echo "切换目录并执行 ./executor..."
     cd ~/executor/executor/bin
+
+    # 设置私钥环境变量
+    export PRIVATE_KEY_LOCAL="$PRIVATE_KEY_LOCAL"
 
     # 重定向日志输出
     ./executor > "$LOGFILE" 2>&1 &
