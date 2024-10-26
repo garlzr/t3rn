@@ -21,10 +21,7 @@ if [ "$(id -u)" != "0" ]; then
     exit 1
 fi
 
-# 读取 PRIVATE_KEY_LOCAL 的值
-if [ -f "$HOME/.bashrc" ]; then
-    source "$HOME/.bashrc"
-fi
+source "$HOME/.bashrc"
 
 # 主菜单函数
 function main_menu() {
